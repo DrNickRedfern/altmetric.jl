@@ -1,5 +1,5 @@
 """
-This Julia module retrieves data Altmetrics data and formats it as a data frame.
+This Julia module retrieves Altmetrics data using a article's digital object identifier and formats it as a data frame.
 
 # Functions:
     altmetric - Access Altmetric API v1 and store the results in a data frame.
