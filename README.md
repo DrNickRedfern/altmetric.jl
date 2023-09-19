@@ -1,7 +1,7 @@
 # altmetric.jl
-This Julia module retrieves Altmetrics data using a article's digital object identifier and formats it as a data frame.
+This Julia module retrieves publication data using a article's digital object identifier from a vareity of open APIs and formats it as a data frame.
 
-## Example:
+## Example
 
 Load the module:
 
@@ -14,7 +14,9 @@ Create a vector of dois to search for:
 
 `doi = ["10.1163/22134913-bja10046", "10.2190/EM.32.2.g"]`
 
-Get data from the API as a data frame:
+### Altmetrics
+
+Get data from the Altmetric v1 API as a data frame:
 
 `result = altmetric(doi)`
 
@@ -26,3 +28,24 @@ The result is a data frame sorted with one row per DOI.
 | 10.2190/em.32.2.g         | 1539699447 | 49769950     | Nick Redfern | 1                       | 1                    |                         |
 
 The number of columns will vary according to the Altmetric data available for an article and so Altmetric.jl will add empty cells when under a column when an article has missing values.
+
+### Unpaywall
+
+Get data from the Unpaywall v2 API as a data frame:
+
+**Unpaywall asks that users be polite and include an email address in their requests. The function wonlt work unless youn include an email address.**
+
+`result = unpaywall(doi, "email@address.com")`
+
+The result is a data frame sorted with one row per DOI.
+
+| doi                       | best_oa_location.endpoint_id | best_oa_location.evidence | best_oa_location.host_type | best_oa_location.is_best | best_oa_location.license |
+|---------------------------|------------------------------|---------------------------|----------------------------|--------------------------|--------------------------|
+| 10.1163/22134913-bja10046 | NA                           | open (via free pdf)       | publisher                  | true                     | NA                       |
+| 10.2190/em.32.2.g         | NA                           | NA                        | NA                         | NA                       | NA                       |
+
+`missing` and `nothing` values will be replaced with the string `NA`.
+
+## Coming soon
+
+I'll add some more bibliometric endpoints (e.g., Crossref events) as I come across them.

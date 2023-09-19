@@ -16,7 +16,7 @@ module Altmetric
 
 using DataFrames, DataFramesMeta, HTTP, JSON, Pipe
 
-export explode_vectors, json_normalize, altmetric
+export explode_vectors, json_normalize, altmetric, unpaywall
 
 """
    result = explode_vectors(d)
@@ -138,6 +138,61 @@ function altmetric(doi::Vector{String})
             end
             df_output = vcat(df_output, df, cols = :union)
         end
+    end
+    println("Finished 🏁")
+    return df_output
+end
+
+"""
+   result = unpaywall(doi)
+
+Access Unpaywall API and store the results in a data frame.
+
+# Arguments:
+- `doi::Vector{String}`: an arrays of strings of the digital object identifiers of research outputs
+- `email::{String}`: Unpaywall requests that users add an email address to the url
+
+# Example:
+```
+# Load the module
+include("./Altmetric.jl")
+using .Altmetric
+
+# Create a vector of dois to search for
+doi = ["10.1163/22134913-bja10046", "10.2190/EM.32.2.g"]
+EMAIL = "demo@email.com"
+
+# Get data from the API as a data frame
+result = unpaywall(doi, EMAIL)
+```
+"""
+
+function unpaywall(doi::Vector{String}, email::String)
+    df_output = DataFrame()
+    for i ∈ eachindex(doi)
+        url = string("https://api.unpaywall.org/v2/", doi[i], "?email=", email)
+        resp = HTTP.get(url)
+        if resp.status != 200
+            println("Unsuccessful 😞: ", doi)
+        else
+            data = String(resp.body) |>
+            JSON.parse |>
+            explode_vectors |>
+            json_normalize
+            df = DataFrame(keys = collect(keys(data)), values = collect(values(data)))
+            df = @chain df begin
+                @transform :id = repeat([i], size(df)[1])
+                sort!([:id, :keys])
+                unstack(:id, :keys, :values)
+                select!(Not(:id))
+                select(:doi, Not(:doi))
+            end
+            df_output = vcat(df_output, df, cols = :union)
+        end
+    end
+    for col in eachcol(df_output)
+        replace!(col, nothing => "NA")
+        replace!(col, missing => "NA")
     end
     println("Finished 🏁")
     return df_output
